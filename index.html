@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ứng dụng theo dõi thói quen hàng ngày (Habit Tracker) với chuỗi ngày liên tiếp và tỉ lệ tuần">
+  <title>Habit Tracker - Theo Dõi Thói Quen Hàng Ngày</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Header Vùng tiêu đề -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-area">
+          <div class="logo-icon">🎯</div>
+          <div>
+            <h1 class="app-title">HABIT TRACKER</h1>
+            <p class="app-subtitle">Xây dựng thói quen tốt mỗi ngày cùng chuỗi streak bứt phá</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Thông báo nổi (Toast) -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <main class="app-main">
+      <!-- VÙNG 1: Form Thêm Thói Quen -->
+      <section class="card form-card" aria-label="Thêm thói quen mới">
+        <form id="formThoiQuen" class="habit-form" novalidate>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="tenThoiQuen" class="form-label">Tên thói quen</label>
+              <div class="input-with-icon">
+                <input 
+                  type="text" 
+                  id="tenThoiQuen" 
+                  name="tenThoiQuen" 
+                  class="form-control" 
+                  placeholder="Ví dụ: Đọc sách 20 phút, Tập thể dục..." 
+                  maxlength="40"
+                  autocomplete="off"
+                >
+              </div>
+              <small id="loiTenThoiQuen" class="error-text"></small>
+            </div>
+
+            <div class="form-group form-group-color">
+              <label for="mauThoiQuen" class="form-label">Màu sắc</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  type="color" 
+                  id="mauThoiQuen" 
+                  name="mauThoiQuen" 
+                  class="color-input" 
+                  value="#6366f1"
+                  title="Chọn màu đại diện"
+                >
+                <span id="mauPreview" class="color-preview-badge" style="background-color: #6366f1;"></span>
+              </div>
+            </div>
+
+            <div class="form-group form-group-goal">
+              <label for="mucTieuTuan" class="form-label">Mục tiêu/tuần</label>
+              <div class="number-input-wrapper">
+                <input 
+                  type="number" 
+                  id="mucTieuTuan" 
+                  name="mucTieuTuan" 
+                  class="form-control text-center" 
+                  value="5" 
+                  min="1" 
+                  max="7" 
+                  step="1"
+                >
+                <span class="unit-label">ngày/tuần</span>
+              </div>
+              <small id="loiMucTieu" class="error-text"></small>
+            </div>
+
+            <div class="form-group form-group-btn">
+              <label class="form-label d-none-mobile">&nbsp;</label>
+              <button type="submit" id="btnThem" class="btn btn-primary btn-submit">
+                <span class="btn-icon">➕</span>
+                <span>Thêm thói quen</span>
+              </button>
+            </div>
+          </div>
+          
+          <div id="thongBaoForm" class="form-alert" style="display: none;"></div>
+        </form>
+      </section>
+
+      <!-- VÙNG 2: Thanh điều khiển (Sắp xếp & Lọc) -->
+      <section class="card controls-card" aria-label="Thanh điều khiển sắp xếp và lọc">
+        <div class="controls-wrapper">
+          <div class="control-item sort-group">
+            <label for="selectSapXep" class="control-label">
+              <span class="icon">↕️</span> Sắp xếp:
+            </label>
+            <div class="select-wrapper">
+              <select id="selectSapXep" class="custom-select">
+                <option value="streak">Streak giảm dần</option>
+                <option value="ten">Tên A – Z</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="control-item filter-group">
+            <label class="custom-checkbox-label">
+              <input type="checkbox" id="checkChuaLam" class="custom-checkbox">
+              <span class="checkbox-visual"></span>
+              <span class="checkbox-text">Chỉ thói quen chưa làm hôm nay</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- VÙNG 3: Lưới hiển thị 7 ngày gần nhất -->
+      <section class="card grid-card" aria-label="Bảng theo dõi 7 ngày gần nhất">
+        <div class="grid-scroll-wrapper">
+          <table id="bangThoiQuen" class="habit-table">
+            <thead>
+              <tr id="hangTieuDeLoi">
+                <!-- Tiêu đề cột sẽ được sinh động bằng JS -->
+              </tr>
+            </thead>
+            <tbody id="thanBangThoiQuen">
+              <!-- Các hàng thói quen sẽ được render bằng JS -->
+            </tbody>
+          </table>
+
+          <!-- Thông báo rỗng hoặc thông báo hoàn thành tất cả -->
+          <div id="thongBaoRong" class="empty-state" style="display: none;">
+            <div class="empty-icon" id="emptyStateIcon">🌱</div>
+            <p class="empty-text" id="emptyStateText">Hãy thêm thói quen đầu tiên</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VÙNG 4: Thống kê tổng quan -->
+      <section class="card stats-card" aria-label="Thống kê tổng quan">
+        <div class="stats-container" id="thanhThongKe">
+          <div class="stat-pill">
+            <span class="stat-icon">📅</span>
+            <span class="stat-label">Hôm nay:</span>
+            <strong class="stat-val" id="statHomNay">0/0 thói quen</strong>
+            <span class="stat-percent" id="statTiLeHomNay">(0%)</span>
+          </div>
+
+          <div class="stat-divider">|</div>
+
+          <div class="stat-pill">
+            <span class="stat-icon">🔥</span>
+            <span class="stat-label">Streak dài nhất:</span>
+            <strong class="stat-val highlight" id="statStreakDaiNhat">Chưa có</strong>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Chỉnh sửa thói quen -->
+    <div id="modalSua" class="modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalSuaTieuDe">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modalSuaTieuDe" class="modal-title">✏️ Chỉnh sửa thói quen</h3>
+          <button type="button" id="btnDongModal" class="btn-close" aria-label="Đóng">&times;</button>
+        </div>
+
+        <form id="formSuaThoiQuen" class="modal-form" novalidate>
+          <input type="hidden" id="suaId">
+
+          <div class="form-group mb-3">
+            <label for="suaTenThoiQuen" class="form-label">Tên thói quen</label>
+            <input 
+              type="text" 
+              id="suaTenThoiQuen" 
+              class="form-control" 
+              placeholder="Nhập tên thói quen..." 
+              maxlength="40"
+              autocomplete="off"
+            >
+            <small id="loiSuaTen" class="error-text"></small>
+          </div>
+
+          <div class="modal-grid-2 mb-3">
+            <div class="form-group">
+              <label for="suaMauThoiQuen" class="form-label">Màu sắc</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  type="color" 
+                  id="suaMauThoiQuen" 
+                  class="color-input"
+                >
+                <span id="suaMauPreview" class="color-preview-badge"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="suaMucTieuTuan" class="form-label">Mục tiêu/tuần</label>
+              <input 
+                type="number" 
+                id="suaMucTieuTuan" 
+                class="form-control text-center" 
+                min="1" 
+                max="7" 
+                step="1"
+              >
+              <small id="loiSuaMucTieu" class="error-text"></small>
+            </div>
+          </div>
+
+          <div id="thongBaoModal" class="form-alert mb-3" style="display: none;"></div>
+
+          <div class="modal-footer">
+            <button type="button" id="btnHuySua" class="btn btn-secondary">Hủy</button>
+            <button type="submit" id="btnLuuSua" class="btn btn-primary">Lưu thay đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Ứng dụng Habit Tracker - Luyện tập kỹ năng JavaScript Cơ bản (AI-Driven)</p>
+      <p class="author-info">Học viên: Trần Lê Chí Vỹ | Lớp: AI-SDLC-PTHB260930</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
